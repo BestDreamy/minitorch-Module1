@@ -50,7 +50,6 @@ def test_stacked_demo() -> None:
     np = dict(mod.named_parameters())
 
     x = str(mod)
-    print(x)
     assert mod.p1.value == 5
     assert mod.non_param == 10
 
@@ -178,7 +177,6 @@ class MockParam:
 def test_parameter() -> None:
     t = MockParam()
     q = minitorch.Parameter(t)
-    print(q)
     assert t.x
     t2 = MockParam()
     q.update(t2)

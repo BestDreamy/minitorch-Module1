@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Tuple
+from collections import deque
 
 from typing_extensions import Protocol
 
@@ -66,8 +67,24 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    scalar_lst = []
+    scalar_deq = deque(variable.chain_rule(1.0))
+    scalar_set = set([variable.unique_id])
+
+    while scalar_deq:
+        (scalar, value) = scalar_deq.popleft()
+        if scalar.is_leaf():
+            scalar_lst.append(scalar)
+        else:
+            if scalar.unique_id not in scalar_set:
+                scalar_lst.append(scalar)
+                scalar_deq.extend(scalar.chain_rule(1.0))
+                scalar_set.add(scalar.unique_id)
+
+                print(scalar.unique_id)
+
+    print(f"scalar_lst: {scalar_lst}")
+    return scalar_lst
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -81,8 +98,11 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    scalar_lst = topological_sort(variable)
+    for it in scalar_lst:
+        if it.is_leaf():
+            it.accumulate_derivative(deriv)
+
 
 
 @dataclass

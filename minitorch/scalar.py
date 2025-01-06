@@ -18,6 +18,9 @@ from .scalar_functions import (
     ReLU,
     ScalarFunction,
     Sigmoid,
+
+    wrap_tuple,
+    unwrap_tuple,
 )
 
 ScalarLike = Union[float, int, "Scalar"]
@@ -165,13 +168,14 @@ class Scalar:
         assert h.ctx is not None
 
         scalar_lst = list(h.inputs)
-        value_lst = list(h.last_fn.backward(h.ctx, d_output))
+        value_lst = list( wrap_tuple( h.last_fn.backward(h.ctx, d_output) ) )
         assert len(scalar_lst) == len(value_lst)
+        # import pdb; pdb.set_trace()
 
         results_lst = []
         for i in range(len(scalar_lst)):
 
-            results_lst += [(scalar_lst[i], value_lst[i])]
+            results_lst.append((scalar_lst[i], value_lst[i]))
 
         return results_lst
 

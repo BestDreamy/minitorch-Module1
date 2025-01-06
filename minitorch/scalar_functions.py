@@ -120,7 +120,7 @@ class Inv(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         (a, ) = ctx.saved_values
-        return operators.inv_back(a, _output)
+        return operators.inv_back(a, d_output)
 
 
 class Neg(ScalarFunction):
@@ -146,7 +146,7 @@ class Sigmoid(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         (a, ) = ctx.saved_values
-        return operators.sigmoid_back(a, _output)
+        return operators.sigmoid_back(a, d_output)
 
 
 class ReLU(ScalarFunction):
@@ -160,7 +160,7 @@ class ReLU(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         (a, ) = ctx.saved_values
-        return operators.relu_back(a, _output)
+        return operators.relu_back(a, d_output)
 
 
 class Exp(ScalarFunction):
@@ -174,7 +174,7 @@ class Exp(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         (a, ) = ctx.saved_values
-        return operators.exp(a, _output)
+        return operators.mul(operators.exp(a), d_output)
 
 
 class LT(ScalarFunction):
