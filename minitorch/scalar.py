@@ -75,8 +75,8 @@ class Scalar:
         global _var_count
         _var_count += 1
         self.unique_id = _var_count
-        self.data = float(v)
-        self.history = back
+        self.data = float(v) # the forward result
+        self.history = back  # the information of backward(last_fn and inputs)
         self.derivative = None
         if name is not None:
             self.name = name
@@ -161,6 +161,7 @@ class Scalar:
         assert self.history is not None
         return self.history.inputs
 
+    # chain rule for backward
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
         h = self.history
         assert h is not None
@@ -170,7 +171,6 @@ class Scalar:
         scalar_lst = list(h.inputs)
         value_lst = list( wrap_tuple( h.last_fn.backward(h.ctx, d_output) ) )
         assert len(scalar_lst) == len(value_lst)
-        # import pdb; pdb.set_trace()
 
         results_lst = []
         for i in range(len(scalar_lst)):

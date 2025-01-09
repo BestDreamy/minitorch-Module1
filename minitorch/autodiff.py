@@ -70,21 +70,24 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     scalar_lst = []
     scalar_deq = deque(variable.chain_rule(1.0))
     scalar_set = set([variable.unique_id])
-
-    while scalar_deq:
-        (scalar, value) = scalar_deq.popleft()
+    
+    # must use dfs to process topsort
+    def dfs(scalar: Scalar):
+        if scalar.unique_id in scalar_set:
+            return 
+        
         if scalar.is_leaf():
             scalar_lst.append(scalar)
+            scalar_set.add(scalar.unique_id)
         else:
-            if scalar.unique_id not in scalar_set:
+            for input in scalar.history.inputs:
+                if input.is_constant():
+                    continue
+                dfs(input)
                 scalar_lst.append(scalar)
-                scalar_deq.extend(scalar.chain_rule(1.0))
                 scalar_set.add(scalar.unique_id)
 
-                print(scalar.unique_id)
-
-    print(f"scalar_lst: {scalar_lst}")
-    return scalar_lst
+    return scalar_lst[::-1]
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -98,11 +101,16 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
+    scalar_dict = {variable: deriv}
+
     scalar_lst = topological_sort(variable)
     for it in scalar_lst:
         if it.is_leaf():
             it.accumulate_derivative(deriv)
-
+        else:
+            scalar_lst, value_lst = it.chain_rule()
+            for i in range(len(scalar_lst)):
+                scalar_dict[scalar_lst[i]] += value_lst[i]
 
 
 @dataclass
