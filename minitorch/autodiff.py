@@ -68,25 +68,29 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
     """
     scalar_lst = []
-    scalar_deq = deque(variable.chain_rule(1.0))
-    scalar_set = set([variable.unique_id])
+    scalar_set = set()
     
+    def add_scalar(scalar: Variable) -> None:
+        if scalar.unique_id not in scalar_set:
+            scalar_set.add(scalar.unique_id)
+            scalar_lst.append(scalar)
+
     # must use dfs to process topsort
-    def dfs(scalar: Scalar):
-        if scalar.unique_id in scalar_set:
+    def dfs(scalar: Variable) -> None:
+        if scalar.is_constant():
+            # scalar_set.add(scalar.unique_id)
             return 
         
         if scalar.is_leaf():
-            scalar_lst.append(scalar)
-            scalar_set.add(scalar.unique_id)
+            add_scalar(scalar)
         else:
             for input in scalar.history.inputs:
-                if input.is_constant():
-                    continue
                 dfs(input)
-                scalar_lst.append(scalar)
-                scalar_set.add(scalar.unique_id)
+            add_scalar(scalar)
 
+
+    dfs(variable)
+    # assert(variable.is_constant() is False)
     return scalar_lst[::-1]
 
 
@@ -101,16 +105,22 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    scalar_dict = {variable: deriv}
-
     scalar_lst = topological_sort(variable)
+
+    scalar_dict = {scalar.unique_id: 0.0 for scalar in scalar_lst}
+    scalar_dict[variable.unique_id] = deriv
+
     for it in scalar_lst:
         if it.is_leaf():
-            it.accumulate_derivative(deriv)
+            it.accumulate_derivative(scalar_dict[it.unique_id])
         else:
-            scalar_lst, value_lst = it.chain_rule()
-            for i in range(len(scalar_lst)):
-                scalar_dict[scalar_lst[i]] += value_lst[i]
+            scalar_value_sub_lst = it.chain_rule(scalar_dict[it.unique_id])
+            for scalar, value in scalar_value_sub_lst:
+                idx = scalar.unique_id
+                # if idx in scalar_dict:
+                scalar_dict[idx] += value
+                # else:
+                    # scalar_dict[idx] = value
 
 
 @dataclass
